@@ -1,8 +1,8 @@
 # main_app/views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from .models import Dog
+from .models import Dog, Vaccine
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from .forms import VaccineForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -100,3 +100,27 @@ def signup(request):
     form = UserCreationForm()
     context = {'form': form, 'error_message': error_message}
     return render(request, 'signup.html', context)
+
+def edit_vaccine(request, dog_id, vaccine_id):
+    dog = get_object_or_404(Dog, id=dog_id)
+    vaccine = get_object_or_404(Vaccine, id=vaccine_id, dog=dog)
+
+    if request.method == 'POST':
+        form = VaccineForm(request.POST, instance=vaccine)
+        if form.is_valid():
+            form.save()
+            return redirect('dog-detail', dog_id=dog.id)
+    else:
+        form = VaccineForm(instance=vaccine)
+
+    return render(request, 'edit_vaccine.html', {'form': form, 'dog': dog})
+
+def delete_vaccine(request, dog_id, vaccine_id):
+    dog = get_object_or_404(Dog, id=dog_id)
+    vaccine = get_object_or_404(Vaccine, id=vaccine_id, dog=dog)
+
+    if request.method == 'POST':
+        vaccine.delete()
+        return redirect('dog-detail', dog_id=dog.id)
+
+    return redirect('dog-detail', dog_id=dog.id)
